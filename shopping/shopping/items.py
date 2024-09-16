@@ -19,6 +19,8 @@ class ProductItem(scrapy.Item):
 
     weight = scrapy.Field()
 
+    brand = scrapy.Field()
+
     stock = scrapy.Field()
     shop_name = scrapy.Field()
     shop_domain = scrapy.Field()
