@@ -63,6 +63,7 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
         item['categories'] = [c['name'] for c in basic_info['category']['detail']]
         item['shop_name'] = basic_info.get('shopName')
         item['shop_domain'] = parse_url(basic_info.get('url'))[0]
+        item['weight'] = basic_info.get('weight', '') + basic_info.get('weightUnit', '')
 
         # Extract common media images
         if product_media:
