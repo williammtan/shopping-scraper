@@ -3,13 +3,13 @@ from scrapy.utils.project import get_project_settings
 from scrapy_redis.spiders import RedisSpider
 from scrapy_redis.utils import bytes_to_str
 
-from ..gql import BaseSpiderGQL, TokpedGQL
-from ..items import ProductItem
-from ..utils import parse_price, parse_url
+from shopping.gql import BaseSpiderGQL, TokpedGQL
+from shopping.items import ProductItem
+from shopping.utils import parse_price, parse_url
 
 class TokopediaProducts(BaseSpiderGQL, RedisSpider):
     name = 'tokopedia_products'
-    query = 'shopping/queries/tokopedia_pdp_query.gql'
+    query = '../queries/tokopedia_pdp_query.gql'
 
     redis_key = 'tokopedia_products:start_urls'
     redis_batch_size = get_project_settings()['REQUEST_CUE']

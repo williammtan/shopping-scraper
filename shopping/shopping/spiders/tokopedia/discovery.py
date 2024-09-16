@@ -1,7 +1,7 @@
 import math
 import re
 
-from ..utils import get_cache
+from shopping.utils import get_cache
 import scrapy
 
 # cookies

@@ -1,6 +1,6 @@
 import scrapy
 
-from ..utils import get_cache
+from shopping.utils import get_cache
 
 def get_cat_ids(categories_list):
     return [
