@@ -1,0 +1,96 @@
+fragment ProductVariant on pdpDataProductVariant {
+  children {
+    price
+    slashPriceFmt
+    optionName
+    productName
+    productURL
+    picture {
+      urlOriginal: url
+    }
+    stock {
+      stock
+    }
+  }
+}
+
+fragment ProductMedia on pdpDataProductMedia {
+  media {
+    type
+    urlOriginal: URLOriginal
+  }
+}
+
+fragment ProductHighlight on pdpDataProductContent {
+  name
+  price {
+    value
+    slashPriceFmt
+  }
+  stock {
+    value
+  }
+}
+
+fragment ProductDetail on pdpDataProductDetail {
+  content {
+    title
+    subtitle
+    applink
+    showAtFront
+    isAnnotation
+  }
+}
+
+query PDPGetLayoutQuery(
+  $shopDomain: String
+  $productKey: String
+  $layoutID: String
+  $apiVersion: Float
+  $userLocation: pdpUserLocation
+  $extParam: String
+  $tokonow: pdpTokoNow
+  $deviceID: String
+) {
+  pdpGetLayout(
+    shopDomain: $shopDomain
+    productKey: $productKey
+    layoutID: $layoutID
+    apiVersion: $apiVersion
+    userLocation: $userLocation
+    extParam: $extParam
+    tokonow: $tokonow
+    deviceID: $deviceID
+  ) {
+    name
+    basicInfo {
+      shopName
+      weight
+      weightUnit
+      url
+      category {
+        breadcrumbURL
+        detail {
+          name
+        }
+      }
+      txStats {
+        countSold
+      }
+      stats {
+        countView
+        countReview
+        rating
+      }
+    }
+    components {
+      name
+      data {
+        ...ProductVariant
+        ...ProductMedia
+        ...ProductHighlight
+        ...ProductDetail
+      }
+    }
+  }
+}

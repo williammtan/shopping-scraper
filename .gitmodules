@@ -1,0 +1,3 @@
+[submodule "scrapy-undetectable-playwright"]
+	path = scrapy-undetectable-playwright
+	url = https://github.com/williammtan/scrapy-undetectable-playwright

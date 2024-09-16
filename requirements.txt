@@ -1,0 +1,3 @@
+graphql-py
+scrapy
+scrapy-redis
