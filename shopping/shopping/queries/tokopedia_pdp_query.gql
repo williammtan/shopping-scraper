@@ -2,7 +2,7 @@ fragment ProductVariant on pdpDataProductVariant {
   children {
     price
     slashPriceFmt
-    optionName
+    optionID
     productName
     productURL
     picture {
@@ -10,6 +10,13 @@ fragment ProductVariant on pdpDataProductVariant {
     }
     stock {
       stock
+    }
+  }
+  variants {
+    name
+    option {
+      productVariantOptionID
+      value
     }
   }
 }

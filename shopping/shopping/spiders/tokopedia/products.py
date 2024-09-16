@@ -9,7 +9,7 @@ from shopping.utils import parse_price, parse_url
 
 class TokopediaProducts(BaseSpiderGQL, RedisSpider):
     name = 'tokopedia_products'
-    query = '../queries/tokopedia_pdp_query.gql'
+    query = 'shopping/queries/tokopedia_pdp_query.gql'
 
     redis_key = 'tokopedia_products:start_urls'
     redis_batch_size = get_project_settings()['REQUEST_CUE']
@@ -95,7 +95,16 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
                 child_item['image_urls'] = [child['picture']['urlOriginal']]
 
                 # Extract options for each variant
-                child_item['options'] = child.get('optionName')
+                child_item['options'] = {}
+                product_variant_ids = child.get("optionID", [])
+                child_item['options'] = {}
+                # print(product_variant_ids)
+                for variant_type in variant_options["data"][0].get('variants', []):
+                    # print(variant_type)
+                    for option in variant_type["option"]:
+                        if int(option["productVariantOptionID"]) in product_variant_ids:
+                            # yes
+                            child_item["options"][variant_type["name"]] = option["value"]
 
                 # Yield the item for each child variant
                 yield child_item
@@ -111,7 +120,7 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
             item['strike_price'] = parse_price(content_data['price'].get('slashPriceFmt'))
             item['stock'] = int(content_data['stock'].get('value'))
             
-            item['options'] = []
+            item['options'] = {}
 
             # Extract images
             if product_media:
