@@ -115,6 +115,8 @@ FEED_EXPORT_ENCODING = "utf-8"
 
 # Redis URL - set according to your Redis instance (this is an example for local development)
 REDIS_URL = client.access_secret_version(request={"name":os.getenv("REDIS_SECRET_VERSION")}).payload.data.decode("utf-8")
+
 REDIS_START_URLS_KEY = '%(name)s:start_urls'
+REDIS_ITEMS_KEY = '%(spider)s:items'
 
 REQUEST_CUE = 3
