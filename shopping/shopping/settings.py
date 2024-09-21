@@ -2,7 +2,7 @@ from google.cloud import secretmanager
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv('../.env')
 
 client = secretmanager.SecretManagerServiceClient()
 
@@ -114,7 +114,7 @@ FEED_EXPORT_ENCODING = "utf-8"
 # DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
 # Redis URL - set according to your Redis instance (this is an example for local development)
-REDIS_URL = client.access_secret_version(request={"name":os.getenv("REDIS_SECRET_VERSION")})
+REDIS_URL = client.access_secret_version(request={"name":os.getenv("REDIS_SECRET_VERSION")}).payload.data.decode("utf-8")
 REDIS_START_URLS_KEY = '%(name)s:start_urls'
 
 REQUEST_CUE = 3
