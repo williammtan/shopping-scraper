@@ -2,7 +2,8 @@ name: Shopping Scraper CI/CD GitHub Actions
 run-name: ${{ github.actor }} is pushing to GCE with GitHub Actions 🚀
 on: [push]
 jobs:
-  job_id:
+  run-gcloud:
+    runs-on: ubuntu-latest
     # Add "id-token" with the intended permissions.
     permissions:
       contents: 'read'
