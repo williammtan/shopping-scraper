@@ -1,6 +1,6 @@
 project_id=$(gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)")
 
-sudo apt update && sudo apt -y install python3 python3-pip python3-venv git
+sudo apt update && sudo apt -y install python3 python3-pip python3-venv git ufw
 git clone https://github.com/williammtan/shopping-scraper.git
 cd shopping-scraper
 git pull
@@ -22,5 +22,7 @@ if ! pgrep -fl scrapyd ; then
 fi
 
 $bin_dir/scrapyd-deploy
+
+bash ../install-scrapeops.sh
 
 # To run: bash <(curl -s https://raw.githubusercontent.com/williammtan/shopping-scraper/main/startup-script.sh)
