@@ -21,4 +21,4 @@ jobs:
         version: '>= 363.0.0'
 
     - name: 'Use gcloud CLI'
-      run: 'gcloud info'
+      run: 'gcloud compute instance-groups managed rolling-action restart shopping-scrapers --region us-central1'
