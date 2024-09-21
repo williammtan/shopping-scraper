@@ -6,6 +6,7 @@ load_dotenv('../.env')
 
 client = secretmanager.SecretManagerServiceClient()
 
+SCRAPEOPS_API_KEY = client.access_secret_version(request={"name":os.getenv("SCRAPEOPS_SECRET_VERSION")}).payload.data.decode("utf-8")
 
 # Scrapy settings for shopping project
 #
@@ -61,15 +62,17 @@ SPIDER_MIDDLEWARES = {
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
+DOWNLOADER_MIDDLEWARES = {
+    'scrapeops_scrapy.middleware.retry.RetryMiddleware': 550,
 #    "shopping.middlewares.ShoppingDownloaderMiddleware": 543,
-#}
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    "scrapy.extensions.telnet.TelnetConsole": None,
-#}
+EXTENSIONS = {
+    # "scrapy.extensions.telnet.TelnetConsole": None,
+    'scrapeops_scrapy.extension.ScrapeOpsMonitor': 500, 
+}
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
