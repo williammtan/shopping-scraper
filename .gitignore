@@ -8,3 +8,4 @@ project.egg-info
 nohup.out
 twistd.pid
 logs
+.env

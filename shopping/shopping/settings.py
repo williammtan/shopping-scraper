@@ -1,3 +1,12 @@
+from google.cloud import secretmanager
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+client = secretmanager.SecretManagerServiceClient()
+
+
 # Scrapy settings for shopping project
 #
 # For simplicity, this file contains only settings considered important or
@@ -105,7 +114,7 @@ FEED_EXPORT_ENCODING = "utf-8"
 # DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
 # Redis URL - set according to your Redis instance (this is an example for local development)
-# REDIS_URL = 'redis://localhost:6379'
-# REDIS_START_URLS_KEY = '%(name)s:start_urls'
+REDIS_URL = client.access_secret_version(request={"name":os.getenv("REDIS_SECRET_VERSION")})
+REDIS_START_URLS_KEY = '%(name)s:start_urls'
 
 REQUEST_CUE = 3

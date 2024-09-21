@@ -2,3 +2,5 @@ graphql-py
 scrapy
 scrapy-redis
 scrapyd
+google-cloud-secret-manager
+python-dotenv
