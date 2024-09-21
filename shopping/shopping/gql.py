@@ -3,7 +3,6 @@ from graphql.parser import GraphQLParser
 from scrapy.utils.project import get_project_settings
 import scrapy
 import json
-import numpy as np
 import shlex
 
 
