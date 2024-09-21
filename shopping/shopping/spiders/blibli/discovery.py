@@ -28,7 +28,8 @@ class BlibliDiscovery(scrapy.Spider):
         },
         "TWISTED_REACTOR": "twisted.internet.asyncioreactor.AsyncioSelectorReactor",
         'ITEM_PIPELINES': {
-            "shopping.pipelines.DuplicatesUrlPipeline": 301
+            "shopping.pipelines.DuplicatesUrlPipeline": 301,
+            'scrapy_redis.pipelines.RedisPipeline': 500,
         },
         "CONCURRENT_REQUESTS": 64
     }

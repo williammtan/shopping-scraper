@@ -40,7 +40,8 @@ class TokopediaDiscovery(scrapy.Spider):
 
     custom_settings = {
         'ITEM_PIPELINES': {
-            "shopping.pipelines.DuplicatesUrlPipeline": 301
+            "shopping.pipelines.DuplicatesUrlPipeline": 301,
+            'scrapy_redis.pipelines.RedisPipeline': 500,
         }
     }
     
