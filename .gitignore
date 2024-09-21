@@ -7,3 +7,4 @@ build
 project.egg-info
 nohup.out
 twistd.pid
+logs

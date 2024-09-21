@@ -1,10 +1,11 @@
 import scrapy
+import os
 
 URL = "https://www.blibli.com/categories"
 
 class BlibliCategories(scrapy.Spider):
     name = "blibli_categories"
-    start_urls = ["file:///Users/williamtan/Projects/shopping-scraper/shopping/blibli_categories.html"]
+    start_urls = ["file://" + os.path.join(os.getcwd(), "blibli_categories.html")]
 
     def parse(self, response):
 
