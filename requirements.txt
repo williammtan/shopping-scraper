@@ -5,3 +5,4 @@ scrapyd
 scrapyd-client
 google-cloud-secret-manager
 python-dotenv
+scrapeops-scrapy
