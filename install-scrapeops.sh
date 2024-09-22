@@ -109,9 +109,3 @@ echo "nginx symlink to sites-available default config created"
 
 sudo systemctl reload nginx
 echo "*** ScrapeOps: reloaded nginx to pick up new default config file"
-
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh
-sudo ufw allow from 46.101.44.87 to any port 443,80 proto tcp
-yes | sudo ufw enable

@@ -1,6 +1,6 @@
 project_id=$(gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)")
 
-sudo apt update && sudo apt -y install python3 python3-pip python3-venv git ufw
+sudo apt update && sudo apt -y install python3 python3-pip python3-venv git
 git clone https://github.com/williammtan/shopping-scraper.git
 cd shopping-scraper
 git pull
