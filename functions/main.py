@@ -7,6 +7,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+PROJECT_NAME = os.getenv('PROJECT_NAME')
 DEFAULT_CATEGORY_URL = 'https://www.tokopedia.com/p/komputer-laptop/aksesoris-pc-gaming/meja-gaming'
 
 # Main pipeline function
@@ -15,9 +16,11 @@ def tokopedia_pipeline(request: Request):
     logger.info("Starting Tokopedia pipeline")
 
     # Get Requested # of VMs to run
-    num_vms = int(request.args.get('num_vms', 1))
-    logger.info(f"Resizing instance group to {num_vms} VMs")
-    resize_instance_group(num_vms)
+    num_vms_str = request.args.get('num_vms')
+    if num_vms_str:
+        num_vms = int(num_vms_str)
+        logger.info(f"Resizing instance group to {num_vms} VMs")
+        resize_instance_group(num_vms)
 
     # Get first url (main category) from request
     main_category = request.json.get('main_category', DEFAULT_CATEGORY_URL) if request.json else DEFAULT_CATEGORY_URL
@@ -63,7 +66,7 @@ def tokopedia_pipeline(request: Request):
     # Step 6: Retrieve products data and save to BigQuery
     product_items = get_from_redis_queue('tokopedia_products:items')
     logger.info(f"Retrieved {len(product_items)} product items")
-    save_to_bigquery('my_project.my_dataset.tokopedia_products', product_items)
+    save_to_bigquery(f'{PROJECT_NAME}.shopping.tokopedia_products', product_items)
     logger.info("Saved product items to BigQuery")
 
     logger.info("Tokopedia pipeline completed successfully")

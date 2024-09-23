@@ -1,6 +1,7 @@
 import os
 import redis
 import time
+import json
 import requests
 from google.cloud import compute_v1, bigquery, secretmanager
 import googleapiclient.discovery
@@ -37,8 +38,8 @@ def resize_instance_group(num_vms):
             operation=operation.name
         )
 
-        if result.status == "DONE":
-            if "error" in result:
+        if result.status == compute_v1.types.Operation.Status.DONE:
+            if result.error:
                 raise Exception(result["error"])
             break
 
@@ -48,7 +49,7 @@ def resize_instance_group(num_vms):
     if i > 0:
         # waited for region operations, some instances just got set up
         # so we need to wait for a bit more
-        time.sleep(os.getenv('INSTANCE_SPINUP_TIME'))
+        time.sleep(int(os.getenv('INSTANCE_SPINUP_TIME')))
 
 # Function to get all internal IPs of VMs in Managed Instance Group
 def get_instance_internal_ips():
@@ -72,7 +73,7 @@ def get_instance_internal_ips():
 
 # Function to trigger a scraper on a specific Scrapyd instance
 def trigger_scraper(scrapyd_url, spider_name, project_name='default'):
-    url = f'http://{scrapyd_url}:6800/schedule.json'
+    url = f'http://{scrapyd_url}/schedule.json'
     data = {
         'project': project_name,
         'spider': spider_name
@@ -82,7 +83,7 @@ def trigger_scraper(scrapyd_url, spider_name, project_name='default'):
 
 # Function to wait for all scrapers to finish on a specific Scrapyd instance
 def wait_for_jobs(scrapyd_url, project_name='default'):
-    url = f'http://{scrapyd_url}:6800/listjobs.json?project={project_name}'
+    url = f'http://{scrapyd_url}/listjobs.json?project={project_name}'
     while True:
         response = requests.get(url).json()
         if not response['pending'] and not response['running']:
@@ -91,11 +92,13 @@ def wait_for_jobs(scrapyd_url, project_name='default'):
 
 # Function to push data to Redis queue
 def push_to_redis_queue(key, values):
-    redis_client.lpush(key, *values)
+    for v in values:
+        redis_client.lpush(key, v)
 
 # Function to get data from Redis queue
 def get_from_redis_queue(key):
-    return redis_client.lrange(key, 0, -1)
+    objs = redis_client.lrange(key, 0, -1)
+    return [json.loads(obj) for obj in objs]
 
 # Function to save data to BigQuery
 def save_to_bigquery(table_id, rows_to_insert):
