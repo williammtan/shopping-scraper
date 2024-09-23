@@ -111,10 +111,10 @@ FEED_EXPORT_ENCODING = "utf-8"
 ## REDIS
 
 # Schedule storing requests queue in Redis
-# SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 
 # Ensure all spiders share the same duplicates filter
-# DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
 # Redis URL - set according to your Redis instance (this is an example for local development)
 REDIS_URL = client.access_secret_version(request={"name":os.getenv("REDIS_SECRET_VERSION")}).payload.data.decode("utf-8")

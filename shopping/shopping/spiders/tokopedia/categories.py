@@ -10,11 +10,6 @@ def get_cat_ids(categories_list):
 
 class TokopediaCategories(scrapy.Spider):
     name = "tokopedia_categories"
-    start_urls = [
-        "https://www.tokopedia.com/p/komputer-laptop/aksesoris-pc-gaming/meja-gaming"
-    ]
-
-
 
     def parse(self, response):
         cache_data = get_cache(response)

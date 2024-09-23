@@ -49,8 +49,10 @@ class TokopediaDiscovery(scrapy.Spider):
         return f"https://www.tokopedia.com/p/{category_slug}?page={page}&pmin={pmin}&pmax={pmax}"
 
     def start_requests(self):
-        with open(self.categories) as f:
-            categories = f.read().split('\n')
+        # with open(self.categories) as f:
+        #     categories = f.read().split('\n')
+
+        categories = self.start_urls # all start_urls are just category slugs
         urls = []
 
         for c in categories:
