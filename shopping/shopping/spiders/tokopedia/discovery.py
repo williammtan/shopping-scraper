@@ -4,6 +4,9 @@ import re
 from shopping.utils import get_cache
 import scrapy
 
+from scrapy_redis.spiders import RedisSpider
+from scrapy_redis.utils import bytes_to_str
+
 # cookies
 # _abck=69423C84F30D0A8EB37ACE1DC97107DF~-1~YAAQxjLdF0U+fbyRAQAAVNXDwAyZOvub8gSqYfuAMUdS/jreZtgDTt3hQAWeJuKbw2/ES1vP9/Y4VreuYe9X5da91HJ7PQNyoOsEdK8/7f3pzPk5YzDCzplhcJ8MLiErZ1sGVOHZBTiN/MDXWBb0b+QhzNPOr4SdMdk/y9xX9aCzG63wwGQxrHWNj2G4E9SkRGT5mS7amgrfOJr1mQGWlebrHrOCgg+vsZi6piVSTwu1ghRIgd4BvBk78xXWGAXVPWlnwbNR0Eug1ZRbMwOvNlJyIf8pe6G+UgDT/bdNGr7dNpniiRoAEuVeRc79Fmgq0eFXpwBSRXhMS6xKBtCU3af86++kG9PkaiCkQRHeXeqR6iBhfCY/OVBNn7CO2S6LSojJLFRQd8TNFR9aBPkkUY2tzL5i3DPpL1W+LlnqFemZKdZFYyltHiv+VIABxKAE2kS15iLC3hOudimnJiOuRPnAHKXhRtM=~0~-1~-1; Path=/; Domain=tokopedia.com; Secure; Expires=Fri, 05 Sep 2025 05:59:05 GMT;
 
@@ -34,7 +37,7 @@ Scrape(Max, 0) // MAX-inf
 PRODUCTS_PER_PAGE = 60
 MAX_PAGE_SEARCH = 100
 
-class TokopediaDiscovery(scrapy.Spider):
+class TokopediaDiscovery(RedisSpider):
     name = "tokopedia_discovery"
     MAX = 10000000 # default
 
@@ -48,17 +51,16 @@ class TokopediaDiscovery(scrapy.Spider):
     def make_url(self, category_slug, page=1, pmin='', pmax=''):
         return f"https://www.tokopedia.com/p/{category_slug}?page={page}&pmin={pmin}&pmax={pmax}"
 
-    def start_requests(self):
-        # with open(self.categories) as f:
-        #     categories = f.read().split('\n')
+    def next_requests(self):
+        """Returns a request to be scheduled or none."""
 
-        categories = self.start_urls # all start_urls are just category slugs
+        datas = self.fetch_data(self.redis_key, self.redis_batch_size)
+        categories = [bytes_to_str(d, self.redis_encoding) for d in datas]
         urls = []
-
-        for c in categories:
+        for category in categories:
             urls.extend([
-                self.make_url(category_slug=c, page=1, pmin=0, pmax=self.MAX),# 0-MAX
-                self.make_url(category_slug=c, page=1, pmin=self.MAX, pmax=""),# MAX-inf
+                self.make_url(category_slug=category, page=1, pmin=0, pmax=self.MAX),# 0-MAX
+                self.make_url(category_slug=category, page=1, pmin=self.MAX, pmax=""),# MAX-inf
             ])
 
         for i, url in enumerate(urls):
