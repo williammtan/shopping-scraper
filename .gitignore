@@ -9,3 +9,4 @@ nohup.out
 twistd.pid
 logs
 .env
+.env.yaml
