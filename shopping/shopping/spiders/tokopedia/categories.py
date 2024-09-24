@@ -1,4 +1,6 @@
 import scrapy
+from scrapy_redis.spiders import RedisSpider
+from scrapy_redis.utils import bytes_to_str
 
 from shopping.utils import get_cache
 
@@ -8,7 +10,7 @@ def get_cat_ids(categories_list):
         for c in categories_list
     ]
 
-class TokopediaCategories(scrapy.Spider):
+class TokopediaCategories(RedisSpider):
     name = "tokopedia_categories"
 
     def parse(self, response):

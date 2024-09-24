@@ -7,6 +7,10 @@ from shopping.gql import BaseSpiderGQL, TokpedGQL
 from shopping.items import ProductItem
 from shopping.utils import parse_price, parse_url
 
+import os
+
+GCS_BUCKET = os.environ.get('GCS_BUCKET')
+
 class TokopediaProducts(BaseSpiderGQL, RedisSpider):
     name = 'tokopedia_products'
     query = 'shopping/queries/tokopedia_pdp_query.gql'
@@ -14,6 +18,11 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
     redis_key = 'tokopedia_products:start_urls'
     redis_batch_size = get_project_settings()['REQUEST_CUE']
     max_idle_time = 7
+
+    custom_settings = {
+        "FEED_URI": f'gs://{GCS_BUCKET}/feeds/%(name)s/%(time)s.jl',
+        "FEED_FORMAT": 'jsonlines'
+    }
 
     def next_requests(self):
         """Returns a request to be scheduled or none."""

@@ -7,6 +7,7 @@ load_dotenv('../.env')
 client = secretmanager.SecretManagerServiceClient()
 
 SCRAPEOPS_API_KEY = client.access_secret_version(request={"name":os.getenv("SCRAPEOPS_SECRET_VERSION")}).payload.data.decode("utf-8")
+GCS_PROJECT_ID = os.environ.get('PROJECT_ID')
 
 # Scrapy settings for shopping project
 #
@@ -123,3 +124,5 @@ REDIS_START_URLS_KEY = '%(name)s:start_urls'
 REDIS_ITEMS_KEY = '%(spider)s:items'
 
 REQUEST_CUE = 3
+
+LOG_LEVEL = 'INFO'
