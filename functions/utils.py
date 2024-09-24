@@ -82,16 +82,20 @@ def trigger_scraper(scrapyd_url, spider_name, project_name='default'):
     return response.json()
 
 # Function to wait for all scrapers to finish on a specific Scrapyd instance
-def wait_for_jobs(scrapyd_url, project_name='default'):
+def wait_for_jobs(scrapyd_url, job_id, project_name='default'):
     url = f'http://{scrapyd_url}/listjobs.json?project={project_name}'
     while True:
         response = requests.get(url).json()
-        if not response['pending'] and not response['running']:
+        finished_ids = [j["id"] for j in response['finished']]
+        if job_id in finished_ids:
             break
         time.sleep(10)  # Wait 10 seconds before checking again
 
 # Function to push data to Redis queue
-def push_to_redis_queue(key, values):
+def push_to_redis_queue(key, values, remove_previous=True): # TODO: remove latest?
+    if remove_previous:
+        for key in redis_client.scan_iter(key+"*"):
+            redis_client.delete(key)
     for v in values:
         redis_client.lpush(key, v)
 
@@ -101,10 +105,24 @@ def get_from_redis_queue(key):
     return [json.loads(obj) for obj in objs]
 
 # Function to save data to BigQuery
-def save_to_bigquery(table_id, rows_to_insert):
+def save_to_bigquery(table_id, gcs_uri):
     client = bigquery.Client()
-    table = client.get_table(table_id)
-    errors = client.insert_rows_json(table, rows_to_insert)
-    if errors:
-        raise RuntimeError(f"Error saving to BigQuery: {errors}")
+    job_config = bigquery.LoadJobConfig(
+        write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
+        source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
+    )
 
+    load_job = client.load_table_from_uri(
+        gcs_uri, table_id, job_config=job_config
+    )  # Make an API request.
+
+    load_job.result()  # Waits for the job to complete.
+
+
+def get_feed_output(scrapyd_url, job_id, project_name='default'):
+    url = f'http://{scrapyd_url}/listjobs.json?project={project_name}'
+    response = requests.get(url).json()
+    for job in response["finished"]:
+        if job["id"] == job_id:
+            return job["items_url"]
+    

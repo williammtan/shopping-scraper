@@ -8,6 +8,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 PROJECT_NAME = os.getenv('PROJECT_NAME')
+SCRAPYD_PROJECT_NAME = os.getenv('SCRAPYD_PROJECT_NAME')
 DEFAULT_CATEGORY_URL = 'https://www.tokopedia.com/p/komputer-laptop/aksesoris-pc-gaming/meja-gaming'
 
 # Main pipeline function
@@ -34,18 +35,21 @@ def tokopedia_pipeline(request: Request):
     tokopedia_categories_vm_ip = internal_ips[0]
     logger.info(f"Running tokopedia_categories on VM: {tokopedia_categories_vm_ip}")
     push_to_redis_queue('tokopedia_categories:start_urls', [main_category])
-    trigger_scraper(tokopedia_categories_vm_ip, 'tokopedia_categories')
+    trigger_scraper(tokopedia_categories_vm_ip, 'tokopedia_categories', project_name=SCRAPYD_PROJECT_NAME)
     wait_for_jobs(tokopedia_categories_vm_ip)
 
     # Step 2: Retrieve category slugs and push to redis
+
     category_slugs = get_from_redis_queue('tokopedia_categories:items')
+    if request.args.get('dry_run'):
+        category_slugs = category_slugs[:1]
     logger.info(f"Retrieved {len(category_slugs)} category slugs")
     push_to_redis_queue('tokopedia_discovery:start_urls', [c['category_slug'] for c in category_slugs])
 
     # Step 3: Run tokopedia_discovery on each VM
     logger.info("Starting tokopedia_discovery on all VMs")
     for scrapyd_ip in internal_ips:
-        trigger_scraper(scrapyd_ip, 'tokopedia_discovery')
+        trigger_scraper(scrapyd_ip, 'tokopedia_discovery', project_name=SCRAPYD_PROJECT_NAME)
     for scrapyd_ip in internal_ips:
         wait_for_jobs(scrapyd_ip)
     logger.info("Completed tokopedia_discovery on all VMs")
@@ -57,16 +61,19 @@ def tokopedia_pipeline(request: Request):
 
     # Step 5: Run tokopedia_products on each VM
     logger.info("Starting tokopedia_products on all VMs")
+    job_ids = []
     for scrapyd_ip in internal_ips:
-        trigger_scraper(scrapyd_ip, 'tokopedia_products')
+        res = trigger_scraper(scrapyd_ip, 'tokopedia_products', project_name=SCRAPYD_PROJECT_NAME)
+        job_ids.append(res['jobid'])
     for scrapyd_ip in internal_ips:
         wait_for_jobs(scrapyd_ip)
     logger.info("Completed tokopedia_products on all VMs")
 
     # Step 6: Retrieve products data and save to BigQuery
-    product_items = get_from_redis_queue('tokopedia_products:items')
-    logger.info(f"Retrieved {len(product_items)} product items")
-    save_to_bigquery(f'{PROJECT_NAME}.shopping.tokopedia_products', product_items)
+    for scrapyd_ip, job_id in zip(internal_ips, job_ids):
+        gcs_uri = get_feed_output(scrapyd_ip, job_id, project_name=SCRAPYD_PROJECT_NAME)
+        save_to_bigquery(f'{PROJECT_NAME}.shopping.tokopedia_products', gcs_uri)
+    
     logger.info("Saved product items to BigQuery")
 
     logger.info("Tokopedia pipeline completed successfully")
