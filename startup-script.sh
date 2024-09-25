@@ -14,7 +14,7 @@ bin_dir=$(dirname $(which python3))
 echo "REDIS_SECRET_VERSION=projects/$project_id/secrets/shopping-redis/versions/latest" > .env
 echo "SCRAPEOPS_SECRET_VERSION=projects/$project_id/secrets/shopping-scrapeops-api-key/versions/latest" >> .env
 echo "PROJECT_ID=$project_id" >> .env
-echo "PROJECT_ID=shopping-scraper-outputs" >> .env
+echo "GCS_BUCKET=shopping-scraper-outputs" >> .env
 
 cd shopping/
 
