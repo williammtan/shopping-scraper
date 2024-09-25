@@ -1,5 +1,7 @@
 import scrapy
 from scrapy.spidermiddlewares.httperror import HttpError
+from scrapy_redis.spiders import RedisSpider
+from scrapy_redis.utils import bytes_to_str
 
 from urllib import parse
 
@@ -16,7 +18,7 @@ def make_url(category, pmin, pmax, page):
     start = (page-1)*40
     return BASE_API_URL + "?" + f"category={category}&minPrice={pmin}&maxPrice={pmax}&page={page}&start={start}"
 
-class BlibliDiscovery(scrapy.Spider):
+class BlibliDiscovery(RedisSpider):
     name = "blibli_discovery"
     MAX = 10000000 # default
     browser = "chrome"
@@ -34,11 +36,9 @@ class BlibliDiscovery(scrapy.Spider):
         "CONCURRENT_REQUESTS": 64
     }
 
-    def start_requests(self):
-        with open(self.categories) as f:
-            urls = f.read().split('\n')
-            # eg. https://www.blibli.com/c4/retro-game-arcade/RE-1000100
-
+    def next_requests(self):
+        datas = self.fetch_data(self.redis_key, self.redis_batch_size)
+        urls = [bytes_to_str(d, self.redis_encoding) for d in datas]
         for url in urls:
             category = extract_category(url)
             yield scrapy.Request(make_url(category, pmin=0, pmax=self.MAX, page=1), dont_filter=True, meta={"impersonate": self.browser}, errback=self.errback_httpbin)

@@ -1,11 +1,14 @@
 import scrapy
 import os
 
+from scrapy_redis.spiders import RedisSpider
+
 URL = "https://www.blibli.com/categories"
 
-class BlibliCategories(scrapy.Spider):
+class BlibliCategories(RedisSpider):
     name = "blibli_categories"
-    start_urls = ["file://" + os.path.join(os.getcwd(), "blibli_categories.html")]
+    # start_urls = [https://storage.cloud.google.com/shopping-scraper-outputs/public/blibli_categories/{subcat}.html]
+
 
     def parse(self, response):
 

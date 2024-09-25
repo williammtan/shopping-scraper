@@ -21,7 +21,8 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
 
     custom_settings = {
         "FEED_URI": f'gs://{GCS_BUCKET}/feeds/%(name)s/%(time)s.jl',
-        "FEED_FORMAT": 'jsonlines'
+        "FEED_FORMAT": 'jsonlines',
+        "ITEM_PIPELINES": {}
     }
 
     def next_requests(self):

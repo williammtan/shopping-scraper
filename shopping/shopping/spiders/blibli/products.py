@@ -4,9 +4,10 @@ from scrapy.utils.project import get_project_settings
 from scrapy_redis.spiders import RedisSpider
 from scrapy_redis.utils import bytes_to_str
 
-import re
-
 from shopping.items import ProductItem
+
+import os
+GCS_BUCKET = os.environ.get('GCS_BUCKET')
 
 class BlibliProducts(RedisSpider):
     name = 'blibli_products'
@@ -26,7 +27,9 @@ class BlibliProducts(RedisSpider):
             "shopping.pipelines.DuplicatesUrlPipeline": 301,
             'scrapy_redis.pipelines.RedisPipeline': 500,
         },
-        "CONCURRENT_REQUESTS": 64
+        "CONCURRENT_REQUESTS": 64,
+        "FEED_URI": f'gs://{GCS_BUCKET}/feeds/%(name)s/%(time)s.jl',
+        "FEED_FORMAT": 'jsonlines'
     }
 
     def make_request_from_data(self, url):
