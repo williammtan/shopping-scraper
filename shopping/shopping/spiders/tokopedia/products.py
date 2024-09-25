@@ -2,6 +2,7 @@ import scrapy
 from scrapy.utils.project import get_project_settings
 from scrapy_redis.spiders import RedisSpider
 from scrapy_redis.utils import bytes_to_str
+import json
 
 from shopping.gql import BaseSpiderGQL, TokpedGQL
 from shopping.items import ProductItem
@@ -38,7 +39,7 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
         
     
     def make_request_from_data(self, url):
-        url = bytes_to_str(url, self.redis_encoding)
+        url = json.loads(bytes_to_str(url, self.redis_encoding))['url']
         shop_alias, product_alias = parse_url(url)
 
         return self.gql.request(
@@ -125,7 +126,6 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
         else:
             # If no variants, yield a single ProductItem using product_content
             content_data = product_content['data'][0]
-            item = ProductItem()
 
             # Extract basic fields
             item['name'] = content_data.get('name')
@@ -134,11 +134,6 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
             item['stock'] = int(content_data['stock'].get('value'))
             
             item['options'] = {}
-
-            # Extract images
-            if product_media:
-                media_data = product_media['data'][0].get('media', [])
-                item['image_urls'] = [media['urlOriginal'] for media in media_data if media['type'] == 'image']
 
             # Yield the single item
             yield item
