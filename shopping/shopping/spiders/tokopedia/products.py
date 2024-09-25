@@ -15,7 +15,6 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
     name = 'tokopedia_products'
     query = 'shopping/queries/tokopedia_pdp_query.gql'
 
-    redis_key = 'tokopedia_products:start_urls'
     redis_batch_size = get_project_settings()['REQUEST_CUE']
     max_idle_time = 7
 
