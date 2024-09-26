@@ -47,12 +47,12 @@ class BlibliProducts(RedisSpider):
         item = ProductItem()
 
         item['name'] = data.get('name')
-        item['options'] = {}
+        item['options'] = []
         for option in data.get('options'):
             if option["selected"]:
                 # do this item
                 for attribute in option['attributes']:
-                    item['options'][attribute['name']] = attribute['value']
+                    item['options'].append({"key": attribute['name'], "value": attribute['value']})
             elif response.meta.get('scrape_variants'):
                 # run requests to scrape variants
                 yield scrapy.Request(
