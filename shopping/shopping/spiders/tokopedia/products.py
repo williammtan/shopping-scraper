@@ -20,7 +20,8 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
     max_idle_time = 7
 
     custom_settings = {
-        "ITEM_PIPELINES": {}
+        "ITEM_PIPELINES": {},
+        "REDIS_START_URLS_KEY": 'tokopedia_discovery:items'
     }
 
     def next_requests(self):
