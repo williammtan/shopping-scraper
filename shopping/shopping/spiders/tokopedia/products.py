@@ -20,8 +20,6 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
     max_idle_time = 7
 
     custom_settings = {
-        "FEED_URI": f'gs://{GCS_BUCKET}/feeds/%(name)s/%(time)s.jl',
-        "FEED_FORMAT": 'jsonlines',
         "ITEM_PIPELINES": {}
     }
 
