@@ -7,7 +7,7 @@ from google.cloud import compute_v1, bigquery, secretmanager
 import googleapiclient.discovery
 
 # Configuration
-
+from schema import PRODUCTS_SCHEMA
 
 client = secretmanager.SecretManagerServiceClient()
 
@@ -128,115 +128,7 @@ def get_from_redis_queue(key):
 def save_to_bigquery(table_id, gcs_uri):
     client = bigquery.Client()
     job_config = bigquery.LoadJobConfig(
-        schema=[
-            {
-                "name": "name",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "description",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "options",
-                "type": "RECORD",
-                "mode": "NULLABLE",
-                "fields": [
-                {
-                    "name": "key",
-                    "type": "STRING",
-                    "mode": "NULLABLE"
-                },
-                {
-                    "name": "value",
-                    "type": "STRING",
-                    "mode": "NULLABLE"
-                }
-                ]
-            },
-            {
-                "name": "url",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "marketplace",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "category_breadcrumb",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "price",
-                "type": "INTEGER",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "strike_price",
-                "type": "INTEGER",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "weight",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "brand",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "stock",
-                "type": "INTEGER",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "shop_name",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "shop_domain",
-                "type": "STRING",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "image_urls",
-                "type": "STRING",
-                "mode": "REPEATED"
-            },
-            {
-                "name": "rating",
-                "type": "FLOAT",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "review_count",
-                "type": "INTEGER",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "view_count",
-                "type": "INTEGER",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "sale_count",
-                "type": "INTEGER",
-                "mode": "NULLABLE"
-            },
-            {
-                "name": "categories",
-                "type": "STRING",
-                "mode": "REPEATED"
-            }
-            ],
+        schema=PRODUCTS_SCHEMA,
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
         source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
     )
