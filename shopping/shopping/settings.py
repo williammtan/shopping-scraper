@@ -123,7 +123,7 @@ REDIS_URL = client.access_secret_version(request={"name":os.getenv("REDIS_SECRET
 REDIS_START_URLS_KEY = '%(name)s:start_urls'
 REDIS_ITEMS_KEY = '%(spider)s:items'
 
-REQUEST_CUE = 3
+REQUEST_CUE = 1
 
 LOG_LEVEL = 'INFO'
 

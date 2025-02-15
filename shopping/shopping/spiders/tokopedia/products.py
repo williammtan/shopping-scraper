@@ -21,7 +21,7 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
 
     custom_settings = {
         "ITEM_PIPELINES": {},
-        "REDIS_START_URLS_KEY": 'tokopedia_discovery:items'
+        "FEEDS": {}
     }
 
     def next_requests(self):

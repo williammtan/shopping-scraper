@@ -4,6 +4,7 @@ from scrapy.utils.project import get_project_settings
 import scrapy
 import json
 import shlex
+import ua_generator
 
 
 class BaseSpiderGQL(object):
@@ -63,7 +64,7 @@ class TokpedGQL():
         json_body = json.dumps(body)
 
         headers_base = {'content-type': 'application/json',
-                        'referer': 'aaaa', 'x-device': 'desktop'}
+                        'referer': 'aaaa', 'x-device': 'desktop', 'origin': 'https://www.tokopedia.com', 'user-agent': str(ua_generator.generate())}
         headers_base.update(headers)
         self.i+=1
         return scrapy.FormRequest(url=self.url, method='POST', body=json_body, headers=headers_base, callback=callback, cb_kwargs=cb_kwargs, meta={'cookie_jar': self.i})
