@@ -1,5 +1,5 @@
 graphql-py
-scrapy
+scrapy==2.11.2
 scrapy-redis
 scrapyd
 scrapyd-client
