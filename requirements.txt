@@ -8,3 +8,4 @@ python-dotenv
 scrapeops-scrapy
 google-cloud-storage
 ua_generator
+scrapy_impersonate
