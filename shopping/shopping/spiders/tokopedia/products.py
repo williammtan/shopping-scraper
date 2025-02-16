@@ -21,7 +21,10 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
 
     custom_settings = {
         "ITEM_PIPELINES": {},
-        "FEEDS": {}
+        "FEEDS": {},
+        "CONCURRENT_REQUESTS": 512,
+        "DUPEFILTER_CLASS": None,
+        "DOWNLOAD_DELAY": 0
     }
 
     def next_requests(self):

@@ -27,9 +27,7 @@ class BlibliProducts(RedisSpider):
             "shopping.pipelines.DuplicatesUrlPipeline": 301,
             'scrapy_redis.pipelines.RedisPipeline': 500,
         },
-        "CONCURRENT_REQUESTS": 64,
-        "FEED_URI": f'gs://{GCS_BUCKET}/feeds/%(name)s/%(time)s.jl',
-        "FEED_FORMAT": 'jsonlines'
+        "CONCURRENT_REQUESTS": 64
     }
 
     def make_request_from_data(self, url):
