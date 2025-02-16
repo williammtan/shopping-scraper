@@ -22,8 +22,8 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
     custom_settings = {
         "ITEM_PIPELINES": {},
         "FEEDS": {},
-        "CONCURRENT_REQUESTS": 512,
-        "DUPEFILTER_CLASS": None,
+        "CONCURRENT_REQUESTS": 1024,
+        "REACTOR_THREADPOOL_MAXSIZE": 400,
         "DOWNLOAD_DELAY": 0
     }
 
@@ -31,13 +31,9 @@ class TokopediaProducts(BaseSpiderGQL, RedisSpider):
         """Returns a request to be scheduled or none."""
 
         datas = self.fetch_data(self.redis_key, self.redis_batch_size)
-        requests = []
+
         for url in datas:
-            requests.append(self.make_request_from_data(url))
-        
-        if len(requests) > 0:
-            # print(json.loads(self.gql.merge_requests(requests).body))
-            yield self.gql.merge_requests(requests)
+            yield self.gql.merge_requests([self.make_request_from_data(url)])
         
     
     def make_request_from_data(self, url):

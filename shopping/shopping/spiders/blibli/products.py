@@ -28,7 +28,8 @@ class BlibliProducts(RedisSpider):
             "shopping.pipelines.DuplicatesUrlPipeline": 301,
             'scrapy_redis.pipelines.RedisPipeline': 500,
         },
-        "CONCURRENT_REQUESTS": 64
+        "CONCURRENT_REQUESTS": 256,
+        "DOWNLOAD_DELAY": 0
     }
 
     def make_request_from_data(self, url):
@@ -75,7 +76,7 @@ class BlibliProducts(RedisSpider):
 
         item['price'] = data.get('price', {}).get('offered')
         if item['price']:
-            item['price'] = int(item['price'])
+            item['price'] = int(item['price']) or 0
         item['strike_price'] = data.get('price', {}).get('listed')
         if item['strike_price']:
             item['strike_price'] = int(item['strike_price'])
