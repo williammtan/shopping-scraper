@@ -7,6 +7,7 @@ from scrapy_redis.utils import bytes_to_str
 from shopping.items import ProductItem
 
 import os
+import json
 GCS_BUCKET = os.environ.get('GCS_BUCKET')
 
 class BlibliProducts(RedisSpider):
@@ -31,7 +32,7 @@ class BlibliProducts(RedisSpider):
     }
 
     def make_request_from_data(self, url):
-        url = bytes_to_str(url, self.redis_encoding)
+        url = json.loads(bytes_to_str(url, self.redis_encoding))['url']
         return scrapy.Request(
                 url=url,
                 callback=self.parse,
