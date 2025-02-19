@@ -11,17 +11,20 @@ TASK_ATTEMPT = os.getenv("CLOUD_RUN_TASK_ATTEMPT", 0)
 
 PROJECT_NAME = os.getenv('PROJECT_NAME')
 SCRAPYD_PROJECT_NAME = os.getenv('SCRAPYD_PROJECT_NAME')
-DEFAULT_CATEGORY_URL = 'https://www.tokopedia.com/p/komputer-laptop/aksesoris-pc-gaming/meja-gaming'
+DEFAULT_TOKOPEDIA_CATEGORY_URL = 'https://www.tokopedia.com/p/komputer-laptop/aksesoris-pc-gaming/meja-gaming'
+DEFAULT_BLIBLI_CATEGORY_URL = 'https://storage.googleapis.com/shopping-scraper-outputs/public/blibli_categories/electronics.html'
 
 NUM_VMS_STR = os.getenv('num_vms')
-MAIN_CATEGORY_URL = os.getenv('main_category', DEFAULT_CATEGORY_URL)
 DRY_RUN = os.getenv('dry_run') # default None
 
+MARKETPLACE = os.getenv('marketplace')
+
 # Main pipeline function
-def main():
+def tokopedia_main():
     logger.info("Starting Tokopedia pipeline")
 
     gcs_uri = create_gcs_uri("tokopedia_products")
+    logger.info(f"Using GCS Blob: {gcs_uri}")
 
     # Get Requested # of VMs to run
     if NUM_VMS_STR:
@@ -30,6 +33,7 @@ def main():
         resize_instance_group(num_vms)
 
     # Get first url (main category) from request
+    MAIN_CATEGORY_URL = os.getenv('main_category', DEFAULT_TOKOPEDIA_CATEGORY_URL)
     logger.info(f"Main category URL: {MAIN_CATEGORY_URL}")
 
    # Step 0: Get all VM internal IPs in the managed instance group
@@ -80,9 +84,70 @@ def main():
     logger.info("Tokopedia pipeline completed successfully")
     return 'OK'
 
+def blibli_main():
+    logger.info("Starting Blibli pipeline")
+
+    gcs_uri = create_gcs_uri("blibli_products")
+    logger.info(f"Using GCS Blob: {gcs_uri}")
+
+    # Get Requested # of VMs to run
+    if NUM_VMS_STR:
+        num_vms = int(NUM_VMS_STR)
+        logger.info(f"Resizing instance group to {num_vms} VMs")
+        resize_instance_group(num_vms)
+
+    # Get first url (main category) from request
+    MAIN_CATEGORY_URL = os.getenv('main_category', DEFAULT_BLIBLI_CATEGORY_URL)
+    logger.info(f"Main category URL: {MAIN_CATEGORY_URL}")
+
+   # Step 0: Get all VM internal IPs in the managed instance group
+    internal_ips = get_instance_internal_ips()
+    logger.info(f"Retrieved {len(internal_ips)} VM internal IPs")
+
+    # Step 1: Run blibli_categories on 1 VM ONLY
+    blibli_categories_vm_ip = internal_ips[0]
+    logger.info(f"Running blibli_categories on VM: {blibli_categories_vm_ip}")
+    push_to_redis_queue('blibli_categories:start_urls', [MAIN_CATEGORY_URL])
+    job_id = trigger_scraper(blibli_categories_vm_ip, 'blibli_categories')
+    wait_for_jobs(blibli_categories_vm_ip, job_id)
+
+    # Step 2: Retrieve category slugs and push to redis
+    category_urls = get_from_redis_queue('blibli_categories:items')
+    if DRY_RUN:
+        category_urls = category_urls[-2:]
+    logger.info(f"Retrieved {len(category_urls)} category urls")
+    push_to_redis_queue('blibli_discovery:start_urls', [c['url'] for c in category_urls])
+    
+    # Step 3: Run blibli_discovery on each VM
+    logger.info("Starting blibli_discovery on all VMs")
+    run_and_wait_multiple(internal_ips, "blibli_discovery")
+    logger.info("Completed blibli_discovery on all VMs")
+    
+    # Step 4: Run blibli_products on each VM
+    logger.info("Starting blibli_products on all VMs")
+    gcs_uris = [
+        gcs_uri + f"{i}.jl"
+        for i in range(len(internal_ips))
+    ]
+    settings = [{"FEED_URI": u} for u in gcs_uris]
+    run_and_wait_multiple(internal_ips, "blibli_products", redis_in="blibli_discovery:items", settings=settings)
+    logger.info("Completed blibli_products on all VMs")
+
+    # Step 5: Retrieve products data and save to BigQuery
+    for gcs_uri in gcs_uris:
+        save_to_bigquery(f'{PROJECT_NAME}.shopping.products', gcs_uri)
+    
+    logger.info("Saved product items to BigQuery")
+
+    logger.info("Blibli pipeline completed successfully")
+    return 'OK'
+
 if __name__ == "__main__":
     try:
-        main()
+        if MARKETPLACE == "tokopedia":
+            tokopedia_main()
+        elif MARKETPLACE == "blibli":
+            blibli_main()
     except Exception as err:
         message = (
             f"Task #{TASK_INDEX}, " + f"Attempt #{TASK_ATTEMPT} failed: {str(err)}"

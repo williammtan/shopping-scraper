@@ -44,7 +44,7 @@ PRODUCTS_SCHEMA = [
     {
         "name": "price",
         "type": "INTEGER",
-        "mode": "REQUIRED"
+        "mode": "NULLABLE"
     },
     {
         "name": "strike_price",

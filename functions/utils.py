@@ -88,6 +88,7 @@ def trigger_scraper(scrapyd_url, spider_name, redis_in=None, settings={}):
     if redis_in:
         data.append(('setting', "REDIS_START_URLS_KEY="+redis_in))
     response = requests.post(url, data=data)
+    print(response.json())
     return response.json()["jobid"]
 
 # Function to wait for all scrapers to finish on a specific Scrapyd instance
@@ -150,3 +151,15 @@ def get_feed_output(scrapyd_url, job_id):
 def create_gcs_uri(spider_name):
     current_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     return f"gs://{GCS_BUCKET}/feeds/{spider_name}/{current_time}/"
+
+def read_gcs_file(gs_filename):
+    bucket_name = gs_filename.split('/')[2]
+    blob_name = '/'.join(gs_filename.split('/')[3:])
+
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    response = blob.download_as_text()
+    if response.status_code == 200:
+        return response.text
+    else:
+        return ""

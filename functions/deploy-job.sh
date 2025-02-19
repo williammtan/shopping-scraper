@@ -4,4 +4,5 @@ gcloud run jobs deploy tokopedia-pipeline \
     --env-vars-file .env.yaml \
     --max-retries 0 \
     --region us-central1 \
-    --vpc-connector default-vpc-connector
+    --vpc-connector default-vpc-connector \
+    --service-account 396235981273-compute@developer.gserviceaccount.com
