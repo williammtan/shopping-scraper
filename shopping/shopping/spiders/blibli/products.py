@@ -76,7 +76,8 @@ class BlibliProducts(RedisSpider):
 
         item['price'] = data.get('price', {}).get('offered')
         if item['price']:
-            item['price'] = int(item['price']) or 0
+            item['price'] = int(item['price'])
+        item['price'] = item['price'] or 0
         item['strike_price'] = data.get('price', {}).get('listed')
         if item['strike_price']:
             item['strike_price'] = int(item['strike_price'])
