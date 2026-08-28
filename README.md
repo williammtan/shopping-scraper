@@ -265,7 +265,7 @@ Known gaps, roughly in priority order:
 - **Schema-drift validation.** Marketplace response changes surface as a BigQuery load error *hours* into a crawl. Validate a sample early and fail fast.
 - **Automate Blibli's category tree.** It's currently seeded from a hand-captured HTML snapshot in GCS because the page needs a real browser. A one-off Playwright step could refresh it per run.
 - **Testability.** `settings.py` calls Secret Manager at import time, so nothing runs offline. Lazy-load secrets behind a local `.env` fallback, then add fixture-driven parser tests, since response shapes are the thing most likely to break.
-- **Housekeeping.** Pin all dependencies; move the checked-in `blibli_out.csv` / `blibli_categories.html` artifacts to GCS; drop the dead `read_gcs_file()` and `TokpedGQL.convert()`; migrate `FEED_URI` to the modern `FEEDS` setting.
+- **Housekeeping.** Pin all dependencies; drop the dead `read_gcs_file()` and `TokpedGQL.convert()`; migrate `FEED_URI` to the modern `FEEDS` setting.
 - **More marketplaces.** The three-stage DAG and unified schema are already marketplace-agnostic; Shopee and Lazada are mostly new discovery/product spiders.
 
 ---

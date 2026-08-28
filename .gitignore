@@ -10,3 +10,4 @@ twistd.pid
 logs
 .env
 .env.yaml
+*.csv
