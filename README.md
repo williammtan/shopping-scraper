@@ -2,7 +2,7 @@
 
 **Full-catalog product extraction for Indonesian e-commerce, at fleet scale.**
 
-A distributed scraping pipeline that walks the *entire* product catalog of [Tokopedia](https://www.tokopedia.com) and [Blibli](https://www.blibli.com) — category tree to individual SKU variants — and lands it in BigQuery as a single normalized table.
+A distributed scraping pipeline that walks the *entire* product catalog of [Tokopedia](https://www.tokopedia.com) and [Blibli](https://www.blibli.com), from category tree to individual SKU variants, and lands it in BigQuery as a single normalized table.
 
 <p>
   <img alt="Python" src="https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white">
@@ -16,7 +16,7 @@ A distributed scraping pipeline that walks the *entire* product catalog of [Toko
 
 ## The problem
 
-Marketplaces don't want you to have their catalog, and they don't have to block you to stop you — they just **cap pagination**.
+Marketplaces don't want you to have their catalog, and they don't have to block you to stop you. They just **cap pagination**.
 
 | Marketplace | Page cap | Products/page | Max reachable per query |
 |---|---|---|---|
@@ -27,7 +27,7 @@ A category with 400,000 products will happily serve you the same first 6,000 for
 
 ## The solution: recursive price-window bisection
 
-If you can't go deeper, go **narrower**. Every result set is filtered by a price window `[pmin, pmax]`. If the window returns more results than the page cap can reach, the window is split at its midpoint and each half is re-queried — recursively, until every leaf window fits under the cap. The union of the leaves is the complete catalog.
+If you can't go deeper, go **narrower**. Every result set is filtered by a price window `[pmin, pmax]`. If the window returns more results than the page cap can reach, the window is split at its midpoint and each half is re-queried recursively, until every leaf window fits under the cap. The union of the leaves is the complete catalog.
 
 ```
 scrape(a, b):
@@ -74,7 +74,7 @@ Implemented for both marketplaces:
 
 ### The three-stage DAG
 
-Each marketplace runs the same pipeline. The **output queue of stage N is handed directly to stage N+1 as its start-URL key** — no intermediate re-push, no glue code.
+Each marketplace runs the same pipeline. The **output queue of stage N is handed directly to stage N+1 as its start-URL key**: no intermediate re-push, no glue code.
 
 ```
   ┌────────────────────┐   ┌────────────────────┐   ┌────────────────────┐
@@ -106,11 +106,11 @@ Spiders self-terminate when their queue drains (`max_idle_time`), which is what 
 ### No browsers. Ever.
 Rather than driving headless Chrome, the pipeline speaks the marketplaces' own internal protocols:
 
-- **Tokopedia** — POSTs the genuine `PDPGetLayoutQuery` operation to `gql.tokopedia.com` with full fragments (`ProductVariant`, `ProductMedia`, `ProductHighlight`, `ProductDetail`) and the `x-tkpd-akamai: pdpGetData` header. See [`tokopedia_pdp_query.gql`](shopping/shopping/queries/tokopedia_pdp_query.gql).
-- **Blibli** — hits `backend/search/products` and `backend/product-detail/products/{id}/_summary` directly.
-- **Where no API exists** — the category tree and search pages are read by extracting Tokopedia's Apollo client cache (`window.__cache`) straight out of the page's inline script (`utils.get_cache`).
+- **Tokopedia**: POSTs the genuine `PDPGetLayoutQuery` operation to `gql.tokopedia.com` with full fragments (`ProductVariant`, `ProductMedia`, `ProductHighlight`, `ProductDetail`) and the `x-tkpd-akamai: pdpGetData` header. See [`tokopedia_pdp_query.gql`](shopping/shopping/queries/tokopedia_pdp_query.gql).
+- **Blibli**: hits `backend/search/products` and `backend/product-detail/products/{id}/_summary` directly.
+- **Where no API exists**: the category tree and search pages are read by extracting Tokopedia's Apollo client cache (`window.__cache`) straight out of the page's inline script (`utils.get_cache`).
 
-The headless-browser route was built and benchmarked first — [`undetectable_playwright_test.py`](shopping/undetectable_playwright_test.py) is what's left of it. The API approach won by orders of magnitude.
+The headless-browser route was built and benchmarked first. [`undetectable_playwright_test.py`](shopping/undetectable_playwright_test.py) is what's left of it. The API approach won by orders of magnitude.
 
 ### Request coalescing
 `TokpedGQL.merge_requests()` packs `REQUEST_CUE` (32) GraphQL operations into a **single array-bodied POST**, and `parse_split()` demultiplexes the array response back to per-item callbacks with their original `cb_kwargs` intact. 32 product detail pages per HTTP round trip.
@@ -130,7 +130,7 @@ def merge_requests(self, requests):
 Blibli fronts its API with TLS-fingerprint bot detection, so those spiders swap in `scrapy_impersonate` download handlers and request a real Chrome JA3 signature via `meta={"impersonate": "chrome"}`. Add rotating user agents (`ua_generator`) and per-request cookiejar isolation.
 
 ### Horizontal scale with no coordination code
-`scrapy-redis` supplies the scheduler queue, the cross-VM duplicate filter, *and* the item sink from one Redis instance. Workers are shared-nothing and interchangeable — scaling the crawl is literally `resize_instance_group(n)`. Each VM writes its own `.jl` shard to GCS (`FEED_URI` injected per-VM at schedule time), so there is no write contention on the way out either.
+`scrapy-redis` supplies the scheduler queue, the cross-VM duplicate filter, *and* the item sink from one Redis instance. Workers are shared-nothing and interchangeable, so scaling the crawl is literally `resize_instance_group(n)`. Each VM writes its own `.jl` shard to GCS (`FEED_URI` injected per-VM at schedule time), so there is no write contention on the way out either.
 
 ### Tuned for throughput
 `CONCURRENT_REQUESTS` runs at 256 globally and **1024** for `tokopedia_products`, with `REACTOR_THREADPOOL_MAXSIZE=400`, zero download delay, DNS caching and compression on.
@@ -164,7 +164,7 @@ Schema: [`functions/schema.py`](functions/schema.py) · Item: [`shopping/items.p
 ## Repository layout
 
 ```
-├── functions/                  # Cloud Run Job — the orchestrator
+├── functions/                  # Cloud Run Job, the orchestrator
 │   ├── job.py                  #   tokopedia_main() / blibli_main() pipelines
 │   ├── utils.py                #   MIG resize, scrapyd RPC, Redis, BigQuery load
 │   ├── schema.py               #   BigQuery table schema
@@ -200,7 +200,7 @@ Schema: [`functions/schema.py`](functions/schema.py) · Item: [`shopping/items.p
 ### One-time setup
 
 ```bash
-# Fleet update policy — recreate instances so they re-pull on restart
+# Fleet update policy: recreate instances so they re-pull on restart
 bash mig-setup.sh
 
 # Deploy the orchestrator
@@ -229,15 +229,15 @@ Job-level, via environment variables:
 
 | Variable | Purpose |
 |---|---|
-| `marketplace` | `tokopedia` \| `blibli` — selects the pipeline |
+| `marketplace` | `tokopedia` \| `blibli`, selects the pipeline |
 | `num_vms` | Fleet size; resizes the MIG before the crawl |
-| `dry_run` | Truncate to 2 categories — smoke-test the full path cheaply |
+| `dry_run` | Truncate to 2 categories, smoke-test the full path cheaply |
 | `main_category` | Root category URL to start the tree walk from |
 | `INSTANCE_GROUP_NAME` · `REGION` · `PROJECT_ID` | Fleet targeting |
 | `GCS_BUCKET` · `PROJECT_NAME` | Output destinations |
 | `REDIS_SECRET_VERSION` · `SCRAPEOPS_SECRET_VERSION` | Secret Manager version URIs |
 
-Crawl-level knobs live in [`shopping/shopping/settings.py`](shopping/shopping/settings.py) —
+Crawl-level knobs live in [`shopping/shopping/settings.py`](shopping/shopping/settings.py):
 `CONCURRENT_REQUESTS`, `REQUEST_CUE` (GraphQL batch size), `MAX_IDLE_TIME_BEFORE_CLOSE`.
 
 ### Operating a live crawl
@@ -257,16 +257,16 @@ curl "http://<vm-internal-ip>/listjobs.json?project=shopping"
 
 Known gaps, roughly in priority order:
 
-- **Temporal columns.** Rows carry no `scraped_at` or `run_id`, and loads are `WRITE_APPEND` with no dedupe key — so reruns stack and price history can't be reconstructed. This is the single highest-value change: it turns a snapshot into a time series.
+- **Temporal columns.** Rows carry no `scraped_at` or `run_id`, and loads are `WRITE_APPEND` with no dedupe key, so reruns stack and price history can't be reconstructed. This is the single highest-value change: it turns a snapshot into a time series.
 - **Cross-VM URL dedup.** `DuplicatesUrlPipeline` keeps an in-process `set()`, so the same URL discovered on two VMs survives twice. Should be a Redis `SET` or delegated to the shared dupefilter.
 - **Real job status.** `wait_for_jobs()` polls scrapyd's `finished` list, which cannot distinguish "completed" from "crashed on request 3". Pair it with a spider-close signal that records item counts and exit reason.
 - **Timeouts and partial failure.** The wait loop has no deadline; one wedged spider hangs a 24-hour job. A per-stage timeout plus continue-on-partial-failure would make long crawls survivable.
 - **Item-count alerting.** The classic scraper failure is `200 OK` with zero items after a site redesign. Alert on per-category yield deviating from the trailing baseline.
 - **Schema-drift validation.** Marketplace response changes surface as a BigQuery load error *hours* into a crawl. Validate a sample early and fail fast.
-- **Automate Blibli's category tree.** It's currently seeded from a hand-captured HTML snapshot in GCS because the page needs a real browser — a one-off Playwright step could refresh it per run.
-- **Testability.** `settings.py` calls Secret Manager at import time, so nothing runs offline. Lazy-load secrets behind a local `.env` fallback, then add fixture-driven parser tests — response shapes are the thing most likely to break.
+- **Automate Blibli's category tree.** It's currently seeded from a hand-captured HTML snapshot in GCS because the page needs a real browser. A one-off Playwright step could refresh it per run.
+- **Testability.** `settings.py` calls Secret Manager at import time, so nothing runs offline. Lazy-load secrets behind a local `.env` fallback, then add fixture-driven parser tests, since response shapes are the thing most likely to break.
 - **Housekeeping.** Pin all dependencies; move the checked-in `blibli_out.csv` / `blibli_categories.html` artifacts to GCS; drop the dead `read_gcs_file()` and `TokpedGQL.convert()`; migrate `FEED_URI` to the modern `FEEDS` setting.
-- **More marketplaces.** The three-stage DAG and unified schema are already marketplace-agnostic — Shopee and Lazada are mostly new discovery/product spiders.
+- **More marketplaces.** The three-stage DAG and unified schema are already marketplace-agnostic; Shopee and Lazada are mostly new discovery/product spiders.
 
 ---
 
@@ -275,7 +275,7 @@ Known gaps, roughly in priority order:
 This project is published for research and educational purposes. It reads only publicly accessible catalog data, but it does not honour `robots.txt` and it impersonates browser fingerprints. Before pointing it at anything:
 
 - Review the target's Terms of Service and your local law
-- Rate-limit to a level the target can absorb — the throughput settings here are aggressive by default
+- Rate-limit to a level the target can absorb. The throughput settings here are aggressive by default
 - Collect no personal data; product listings are not people
 - Don't republish scraped content in ways that infringe copyright
 
@@ -283,4 +283,4 @@ You are responsible for how you use it.
 
 ## License
 
-No license has been specified. All rights reserved by default — add one before sharing or reuse.
+No license has been specified. All rights reserved by default, so add one before sharing or reuse.
